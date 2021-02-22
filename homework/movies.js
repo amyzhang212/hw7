@@ -8,14 +8,15 @@
 
 // Signed in
   if (user) {
-    console.log('You are signed in as ${user.displayName}')
+    console.log(`You are signed in as ${user.displayName}`)
     // Ensure the signed-in user is in the users collection
     db.collection('users').doc(user.uid).set({
       name: user.displayName,
-      email: user.email
-      id: user.uid 
+      email: user.email,
     })
   
+    render(movies)
+    
     // Sign-out button
     document.querySelector('.sign-in-or-sign-out').innerHTML = `
     <h1> You are signed in as ${user.displayName}</h1> 
@@ -50,13 +51,13 @@ async function render(movies){
   for (let i=0; i<movies.length; i++) {
     let currentUser = firebase.auth().currentUser
     let movie = movies[i]
-    let docRef = await db.collection('watched').doc(`${movie.id}`).get()
+    let docRef = await db.collection('watched').doc(`${movie.id}+${currentUser.uid}`).get()
     let watchedMovie = docRef.data()
     let opacityClass = ''
     if (watchedMovie) {
       opacityClass = 'opacity-20'
     }
-  } 
+
     document.querySelector('.movies').insertAdjacentHTML('beforeend', `
       <div class="w-1/5 p-4 movie-${movie.id} ${opacityClass}">
         <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" class="w-full">
@@ -69,13 +70,13 @@ async function render(movies){
       console.log('You have watched this movie')
       let movieElement = document.querySelector(`.movie-${movie.id}`)
       movieElement.classList.add('opacity-20')
-      await db.collection('watched').doc(`${movie.id}`).set({
+      await db.collection('watched').doc(`${movie.id}+${currentUser.uid}`).set({
         movieId:movie.id,
         movietitle: movie.original_title
       })
     }) 
   }
-})
+}
 
 
 // Goal:   Refactor the movies application from last week, so that it supports
