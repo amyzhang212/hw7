@@ -1,18 +1,19 @@
-firebase.auth().onAuthStateChanged(async function(user){
   let db = firebase.firestore()
+  firebase.auth().onAuthStateChanged(async function(user){
   let apiKey = '4e92859f249ce468e9ba6d55ce1f2747'
   let response = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&language=en-US`)
   let json = await response.json()
   let movies = json.results
   console.log(movies)
 
+// Signed in
   if (user) {
-    // Signed in
-    console.log('signed in')
+    console.log('You are signed in as ${user.displayName}')
     // Ensure the signed-in user is in the users collection
     db.collection('users').doc(user.uid).set({
       name: user.displayName,
       email: user.email
+      id: user.uid 
     })
   
     // Sign-out button
@@ -47,6 +48,7 @@ firebase.auth().onAuthStateChanged(async function(user){
 
 async function render(movies){
   for (let i=0; i<movies.length; i++) {
+    let currentUser = firebase.auth().currentUser
     let movie = movies[i]
     let docRef = await db.collection('watched').doc(`${movie.id}`).get()
     let watchedMovie = docRef.data()
@@ -64,13 +66,12 @@ async function render(movies){
 
     document.querySelector(`.movie-${movie.id}`).addEventListener('click', async function(event) {
       event.preventDefault()
+      console.log('You have watched this movie')
       let movieElement = document.querySelector(`.movie-${movie.id}`)
       movieElement.classList.add('opacity-20')
       await db.collection('watched').doc(`${movie.id}`).set({
         movieId:movie.id,
         movietitle: movie.original_title
-        userid: currentUser.uid,
-        userEmail:currentUser.email
       })
     }) 
   }
